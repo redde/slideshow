@@ -1,33 +1,103 @@
-/*! Slideshow - v0.1.0 - 2013-04-15
+/*! Slideshow - v0.1.0 - 2013-05-24
 * https://github.com/konstantingorozankin/slideshow
 * Copyright (c) 2013 Konstantin Gorozhankin; Licensed MIT */
-(function($) {
+(function() {
+  (function($) {
+    $.fn.slideshow = function(opts) {
+      var Builder, settings;
 
-  // Collection method.
-  $.fn.awesome = function() {
-    return this.each(function(i) {
-      // Do something awesome to each selected element.
-      $(this).html('awesome' + i);
-    });
-  };
+      settings = $.extend({
+        timeOut: 4000,
+        elem: "ul.slides li",
+        setNavi: true
+      }, opts);
+      Builder = function(el) {
+        this.me = $(el);
+        return this.init();
+      };
+      Builder.prototype = {
+        showSlide: function() {
+          var sl;
 
-  // Static method.
-  $.awesome = function(options) {
-    // Override default options with passed-in options.
-    options = $.extend({}, $.awesome.options, options);
-    // Return something awesome.
-    return 'awesome' + options.punctuation;
-  };
+          sl = this;
+          this.timeIndex = setTimeout(function() {
+            sl.slideSwitch();
+          }, settings.timeOut);
+        },
+        setNavi: function(next) {
+          var currentActive, items, nextActive;
 
-  // Static method default options.
-  $.awesome.options = {
-    punctuation: '.'
-  };
+          items = $("ul#slide_navi li");
+          currentActive = items.filter(".active");
+          nextActive = items.eq(next.index());
+          currentActive.removeClass("active");
+          nextActive.addClass("active");
+        },
+        slideSwitch: function(index) {
+          var active, next;
 
-  // Custom selector.
-  $.expr[':'].awesome = function(elem) {
-    // Is this element awesome?
-    return $(elem).text().indexOf('awesome') !== -1;
-  };
+          this.me.find(settings.elem).stop(true, true);
+          active = this.me.find("" + settings.elem + ".active");
+          if (active.length === 0) {
+            active = this.me.find("" + settings.elem + ":last");
+          }
+          if (index === void 0) {
+            next = active.next(settings.elem).length ? active.next(settings.elem) : this.me.find("" + settings.elem + ":first");
+          } else {
+            next = this.me.find("" + settings.elem + ":eq(" + index + ")");
+            if (active.index() === next.index()) {
+              return false;
+            }
+          }
+          if (settings.setNavi) {
+            this.setNavi(next);
+          }
+          active.addClass('last-active');
+          next.css({
+            opacity: 0.0
+          }).addClass("active").animate({
+            opacity: 1.0
+          }, 1000, function() {
+            return active.removeClass("active last-active");
+          });
+          this.showSlide();
+        },
+        printNavi: function(pagination) {
+          $(this.me).append(pagination);
+        },
+        init: function() {
+          var i, links, max, pagination, sl;
 
-}(jQuery));
+          settings.setNavi = settings.setNavi && this.me.find(settings.elem).length > 1;
+          if (settings.setNavi) {
+            sl = this;
+            links = "";
+            i = 1;
+            max = this.me.find(settings.elem).length;
+            while (i <= max) {
+              links += "<li><a href='#'>" + i + "</a>";
+              i++;
+            }
+            links = $(links).click(function(e) {
+              clearTimeout(sl.timeIndex);
+              sl.slideSwitch($(this).index());
+              e.preventDefault();
+            });
+            pagination = $("<ul id='slide_navi'></ul>");
+            pagination.html(links);
+            sl.printNavi(pagination);
+            links.filter(":first").addClass("active");
+          }
+          this.me.find(settings.elem).filter(":first").addClass("active");
+          if (this.me.find(settings.elem).length > 1) {
+            this.showSlide();
+          }
+        }
+      };
+      return this.each(function() {
+        new Builder(this);
+      });
+    };
+  })(jQuery);
+
+}).call(this);

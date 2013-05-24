@@ -1,13 +1,13 @@
 (function() {
   (function($) {
-    $.fn.slideshow = function() {
+    $.fn.slideshow = function(opts) {
       var Builder, settings;
 
       settings = $.extend({
         timeOut: 4000,
         elem: "ul.slides li",
         setNavi: true
-      });
+      }, opts);
       Builder = function(el) {
         this.me = $(el);
         return this.init();

@@ -1,9 +1,10 @@
 (($) ->
-  $.fn.slideshow = ->
+  $.fn.slideshow = (opts)->
     settings = $.extend
       timeOut: 4000
       elem: "ul.slides li"
       setNavi: true
+    , opts
 
     Builder = (el) ->
       @me = $(el)
